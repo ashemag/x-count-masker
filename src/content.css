@@ -8,3 +8,14 @@
   color: transparent !important;
   background: transparent !important;
 }
+
+.x-count-masker-follower-count:not(.x-count-masker-follower-count--revealed) {
+  color: transparent !important;
+  text-shadow: none !important;
+  user-select: none !important;
+}
+
+.x-count-masker-follower-count:not(.x-count-masker-follower-count--revealed)::selection {
+  color: transparent !important;
+  background: transparent !important;
+}
