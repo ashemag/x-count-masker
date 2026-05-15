@@ -1,0 +1,10 @@
+.x-count-masker-count {
+  color: transparent !important;
+  text-shadow: none !important;
+  user-select: none !important;
+}
+
+.x-count-masker-count::selection {
+  color: transparent !important;
+  background: transparent !important;
+}
