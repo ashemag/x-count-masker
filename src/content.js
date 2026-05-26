@@ -40,7 +40,10 @@
     "i"
   );
   const IMPRESSION_LABEL_PATTERN = /^\s*Impressions?\s*$/i;
-  const COMMENT_LABEL_PATTERN = /\b(Repl(?:y|ies)|Comments?)\b/i;
+  const COMMENT_LABEL_PATTERN = new RegExp(
+    String.raw`^\s*(?:${COUNT_VALUE_PATTERN}\s+)?(Repl(?:y|ies)|Comments?)\s*$`,
+    "i"
+  );
   const VIEW_METRIC_LABEL_PATTERN = /\b(Views?|Impressions?)\b/i;
   const ACTION_SELECTOR = ACTION_TEST_IDS
     .map((testId) => `[data-testid="${testId}"]`)
@@ -64,6 +67,7 @@
 
   const isCommentElement = (element) => {
     if (element.matches(COMMENT_ACTION_SELECTOR)) return true;
+    if (element.querySelector(ACTION_SELECTOR)) return false;
 
     const label = element.getAttribute("aria-label") || "";
     return COMMENT_LABEL_PATTERN.test(label);
@@ -185,7 +189,7 @@
     }
 
     for (const labelledElement of root.querySelectorAll("[aria-label]")) {
-      if (COMMENT_LABEL_PATTERN.test(labelledElement.getAttribute("aria-label") || "")) {
+      if (isCommentElement(labelledElement)) {
         unmaskCommentCounts(labelledElement);
       }
     }
