@@ -9,6 +9,7 @@ It masks counts for common X post actions:
 - quotes
 - likes
 - bookmarks
+- impressions
 - views
 
 Reply/comment counts stay visible.
@@ -26,6 +27,6 @@ The extension runs as a content script on `x.com` and `twitter.com`. It scans th
 ## Notes
 
 - The extension does not block network requests or modify your account data.
-- Like, repost, reply, bookmark, and view controls remain clickable.
+- Like, repost, reply, bookmark, impression analytics, and view controls remain clickable.
 - Counts are hidden in the page UI with CSS, and new counts loaded during infinite scroll are masked automatically.
 - Follower counts can be revealed or hidden again by double-clicking the masked count.
