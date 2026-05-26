@@ -40,6 +40,7 @@
     "i"
   );
   const IMPRESSION_LABEL_PATTERN = /^\s*Impressions?\s*$/i;
+  const COMMENT_LABEL_PATTERN = /\b(Repl(?:y|ies)|Comments?)\b/i;
   const VIEW_METRIC_LABEL_PATTERN = /\b(Views?|Impressions?)\b/i;
   const ACTION_SELECTOR = ACTION_TEST_IDS
     .map((testId) => `[data-testid="${testId}"]`)
@@ -60,6 +61,24 @@
   };
 
   const isCountText = (text) => COUNT_TEXT_PATTERN.test(text);
+
+  const isCommentElement = (element) => {
+    if (element.matches(COMMENT_ACTION_SELECTOR)) return true;
+
+    const label = element.getAttribute("aria-label") || "";
+    return COMMENT_LABEL_PATTERN.test(label);
+  };
+
+  const isInsideCommentControl = (element) => {
+    let current = element;
+
+    for (let depth = 0; current && depth < 6; depth++) {
+      if (isCommentElement(current)) return true;
+      current = current.parentElement;
+    }
+
+    return false;
+  };
 
   const hasCountText = (element) => {
     for (const candidate of element.querySelectorAll(METRIC_TEXT_SELECTOR)) {
@@ -126,6 +145,8 @@
 
     const candidates = container.querySelectorAll(METRIC_TEXT_SELECTOR);
     for (const candidate of candidates) {
+      if (isInsideCommentControl(candidate)) continue;
+
       const text = candidate.textContent || "";
       if (isCountText(text)) {
         maskVisibleCountNode(candidate);
@@ -138,8 +159,6 @@
 
     for (let depth = 0; container && depth < 5; depth++) {
       if (hasCountText(container)) {
-        if (container.querySelector(COMMENT_ACTION_SELECTOR)) return;
-
         maskCountsInContainer(container);
         return;
       }
@@ -156,6 +175,18 @@
     for (const candidate of candidates) {
       if (candidate.classList.contains("x-count-masker-count")) {
         unmaskVisibleCountNode(candidate);
+      }
+    }
+  };
+
+  const unmaskAllCommentCounts = (root) => {
+    for (const commentAction of root.querySelectorAll(COMMENT_ACTION_SELECTOR)) {
+      unmaskCommentCounts(commentAction);
+    }
+
+    for (const labelledElement of root.querySelectorAll("[aria-label]")) {
+      if (COMMENT_LABEL_PATTERN.test(labelledElement.getAttribute("aria-label") || "")) {
+        unmaskCommentCounts(labelledElement);
       }
     }
   };
@@ -293,6 +324,7 @@
         const candidates = container.querySelectorAll(METRIC_TEXT_SELECTOR);
         for (const candidate of candidates) {
           if (candidate === labelElement) continue;
+          if (isInsideCommentControl(candidate)) continue;
 
           const text = candidate.textContent || "";
           if (isCountText(text)) {
@@ -324,10 +356,6 @@
       maskActionCounts(actionElement);
     }
 
-    for (const commentAction of root.querySelectorAll(COMMENT_ACTION_SELECTOR)) {
-      unmaskCommentCounts(commentAction);
-    }
-
     for (const followerLink of root.querySelectorAll(FOLLOWER_LINK_SELECTOR)) {
       maskFollowerCount(followerLink);
     }
@@ -336,6 +364,7 @@
     wrapMetricCountText(scanRoot, IMPRESSION_TEXT_PATTERN);
     maskImpressionLabelledCounts(scanRoot);
     maskViewMetricCounts(scanRoot);
+    unmaskAllCommentCounts(scanRoot);
 
     for (const element of root.querySelectorAll("[aria-label]")) {
       if (hasActionLabel(element)) {
