@@ -318,29 +318,44 @@
     }
   };
 
+  const maskCountPairedWithLabel = (labelElement) => {
+    let container = labelElement.parentElement;
+
+    for (let depth = 0; container && depth < 8; depth++) {
+      if (container.closest(USER_TEXT_SELECTOR)) return;
+
+      const candidates = Array.from(
+        container.querySelectorAll(METRIC_TEXT_SELECTOR)
+      );
+      const labelIndex = candidates.indexOf(labelElement);
+
+      if (labelIndex !== -1) {
+        const precedingCount = candidates
+          .slice(0, labelIndex)
+          .reverse()
+          .find((candidate) => isCountText(candidate.textContent || ""));
+        const followingCount = candidates
+          .slice(labelIndex + 1)
+          .find((candidate) => isCountText(candidate.textContent || ""));
+        const countElement = precedingCount || followingCount;
+
+        if (countElement && !isInsideCommentControl(countElement)) {
+          maskVisibleCountNode(countElement);
+          return;
+        }
+      }
+
+      container = container.parentElement;
+    }
+  };
+
   const maskLabelledMetricCounts = (root) => {
     for (const labelElement of root.querySelectorAll(METRIC_TEXT_SELECTOR)) {
       if (!MASKED_METRIC_LABEL_PATTERN.test(labelElement.textContent || "")) {
         continue;
       }
 
-      for (const container of [
-        labelElement.parentElement,
-        labelElement.parentElement?.parentElement
-      ]) {
-        if (!container || container.closest(USER_TEXT_SELECTOR)) continue;
-
-        const candidates = container.querySelectorAll(METRIC_TEXT_SELECTOR);
-        for (const candidate of candidates) {
-          if (candidate === labelElement) continue;
-          if (isInsideCommentControl(candidate)) continue;
-
-          const text = candidate.textContent || "";
-          if (isCountText(text)) {
-            maskVisibleCountNode(candidate);
-          }
-        }
-      }
+      maskCountPairedWithLabel(labelElement);
     }
   };
 
