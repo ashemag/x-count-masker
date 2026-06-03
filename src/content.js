@@ -35,11 +35,16 @@
     String.raw`\b(${COUNT_VALUE_PATTERN})\s+(Followers?)\b`,
     "i"
   );
-  const IMPRESSION_TEXT_PATTERN = new RegExp(
-    String.raw`\b(${COUNT_VALUE_PATTERN})\s+(Impressions?)\b`,
+  const MASKED_METRIC_LABEL_WORDS =
+    String.raw`(?:Reposts?|Retweets?|Quotes?|Likes?|Bookmarks?|Views?|Impressions?)`;
+  const MASKED_METRIC_TEXT_PATTERN = new RegExp(
+    String.raw`\b(${COUNT_VALUE_PATTERN})\s+(${MASKED_METRIC_LABEL_WORDS})\b`,
     "i"
   );
-  const IMPRESSION_LABEL_PATTERN = /^\s*Impressions?\s*$/i;
+  const MASKED_METRIC_LABEL_PATTERN = new RegExp(
+    String.raw`^\s*${MASKED_METRIC_LABEL_WORDS}\s*$`,
+    "i"
+  );
   const COMMENT_LABEL_PATTERN = new RegExp(
     String.raw`^\s*(?:${COUNT_VALUE_PATTERN}\s+)?(Repl(?:y|ies)|Comments?)\s*$`,
     "i"
@@ -119,7 +124,7 @@
     element.dataset.xCountMaskerLastLabel = label;
 
     const sanitized = label
-      .replace(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\s*[KMB]?\s+(Replies|Reply|Reposts|Repost|Quotes|Quote|Likes|Like|Bookmarks|Bookmark|Impressions|Impression|Views|View)\b/gi, "$1")
+      .replace(/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\s*[KMB]?\s+(Replies|Reply|Reposts|Repost|Retweets|Retweet|Quotes|Quote|Likes|Like|Bookmarks|Bookmark|Impressions|Impression|Views|View)\b/gi, "$1")
       .replace(/\s{2,}/g, " ")
       .trim();
 
@@ -313,9 +318,9 @@
     }
   };
 
-  const maskImpressionLabelledCounts = (root) => {
+  const maskLabelledMetricCounts = (root) => {
     for (const labelElement of root.querySelectorAll(METRIC_TEXT_SELECTOR)) {
-      if (!IMPRESSION_LABEL_PATTERN.test(labelElement.textContent || "")) {
+      if (!MASKED_METRIC_LABEL_PATTERN.test(labelElement.textContent || "")) {
         continue;
       }
 
@@ -365,8 +370,8 @@
     }
 
     const scanRoot = root.body || root;
-    wrapMetricCountText(scanRoot, IMPRESSION_TEXT_PATTERN);
-    maskImpressionLabelledCounts(scanRoot);
+    wrapMetricCountText(scanRoot, MASKED_METRIC_TEXT_PATTERN);
+    maskLabelledMetricCounts(scanRoot);
     maskViewMetricCounts(scanRoot);
     unmaskAllCommentCounts(scanRoot);
 
